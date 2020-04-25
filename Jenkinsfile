@@ -1,46 +1,95 @@
-node('master') 
+pipeline
 {
-   
-   stage('ContinuousDownload') 
+    agent any
+    stages
     {
-       git 'https://github.com/eml2raghu/maven.git'
+        stage('CDLoans')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        git 'https://github.com/eml2raghu/maven.git'   
+                        mail bcc: '', body: 'Jenkins CICD successful', cc: '', from: 'eml2raghu@yahoo.com', replyTo: '', subject: 'Jenkins Testing', to: 'eml2raghu@yahoo.com'
+                    }
+                    catch(Exception ee1)
+                    {
+                        sh label: '', script: 'echo "Since above mail function is not working, the control will come into catch section and will print this line in Downloads section. You can take any action instead of exiting and can continue with other stages of CI-CD (Just to demonstrate, exit is not added here)"'
+                    }
+                }
 
+            }
+        }
+        stage('CBLoans')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh label: '', script: 'mvn package'                        
+                    }
+                    catch(Exception e2)
+                    {
+                        sh label: '', script: 'echo "Inside catch section in Build section, You can take any action instead of exiting and can continue with other stages of CI-CD"'                        
+                        exit(1)
+                    }
+                }
+            }   
+        }
+        stage('ContinuousLoans')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                        sh label: '', script: 'scp /root/.jenkins/workspace/Dec_pipeline4/webapp/target/webapp.war ubuntu@172.31.9.223:/var/lib/tomcat8/webapps/testapp.war'                        
+                    }
+                    catch(Exception e3)
+                    {
+                        sh label: '', script: 'echo "catch section in Deployment section"'                        
+                    }
+                }
+            }
+        }
+        stage('ContinuousTesting')
+        {
+            steps
+            {
+                script
+                {
+                    try
+                    {
+                         git 'https://github.com/intelliqittrainings/FunctionalTesting.git'
+                         sh label: '', script: 'java -jar /root/.jenkins/workspace/Dec_pipeline4/testing.jar '                        
+                    }
+                    catch(Exception e4)
+                    {
+                        sh label: '', script: 'echo "catch section in Testing section"'                                    
+                    }
+                }
+             }
+        }        
+        stage('ContiniousDelivery')
+        {
+            steps
+            {
+                script{
+                    try
+                    {
+                        sh label: '', script: 'scp /root/.jenkins/workspace/Dec_pipeline4/webapp/target/webapp.war ubuntu@172.31.5.132:/var/lib/tomcat8/webapps/prodapp.war'                        
+                    }
+                    catch(Exception e5)
+                    {
+                        sh label: '', script: 'echo "catch section in Delivery section"'                                    
+                    }
+                }
+            }
+        }        
     }
- 
-   
-    
-    stage('ContinuousBuild') 
-    {
-        
-   	sh label: '', script: 'mvn package'
-
-    }
-
-  
-    stage('ContinuousDeploy') 
-    {
-    
-	sh label: '', script: 'scp /root/.jenkins/workspace/Scripted_Pipeline1/webapp/target/webapp.war ubuntu@172.31.9.223:/var/lib/tomcat8/webapps/test.war'
-
-    }
-  
-
-    stage('ContinuousTesting') 
-    {
-      
-     	git 'https://github.com/intelliqittrainings/FunctionalTesting.git'
-      sh label: '', script: 'java -jar /root/.jenkins/workspace/Scripted_Pipeline1/testing.jar'
-  
-    }
-
-
-    stage('ContinuousDelivery') 
-    {
-    
-	sh label: '', script: 'scp /root/.jenkins/workspace/Scripted_Pipeline1/webapp/target/webapp.war ubuntu@172.31.5.132:/var/lib/tomcat8/webapps/prod.war'
-
-    }
-
-    
-
 }
